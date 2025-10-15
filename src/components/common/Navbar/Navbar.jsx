@@ -3,7 +3,7 @@ import Input from "../../ui/Input";
 import { Avatar } from "@mui/material";
 const Navbar = () => {
   return (
-    <div className=" bg-gray-100 p-4 w-full flex justify-between items-center">
+    <div className=" bg-gray-100 py-4 px-10 w-full flex justify-between items-center">
       {/*------------- searching bar -------------- */}
       <div>
         <Input
