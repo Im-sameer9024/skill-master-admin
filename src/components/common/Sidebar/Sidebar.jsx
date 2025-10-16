@@ -2,7 +2,7 @@ import Logo from "../../../assets/logo.png";
 import SidebarLinks from "./SidebarLinks";
 const Sidebar = () => {
   return (
-    <div className=" bg-lightSky h-screen w-3/12">
+    <div className=" bg-lightSky h-screen w-2/12">
       {/*----------- logo ------------ */}
       <div className="w-22  mx-auto mt-5">
         <img src={Logo} alt="logo" className="w-full h-full object-cover" />
