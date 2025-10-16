@@ -38,7 +38,7 @@ const SidebarLinks = () => {
                   className={`transition-all duration-300 ease-in-out ${
                     isActive 
                       ? "text-darkSky transform scale-110" 
-                      : "text-gray-600 group-hover:text-darkSky"
+                      : " text-content group-hover:text-darkSky"
                   }`}
                 >
                   {link.icon}
@@ -47,7 +47,7 @@ const SidebarLinks = () => {
                   className={`transition-all duration-300 ease-in-out text-sm ${
                     isActive 
                       ? "text-darkSky font-semibold" 
-                      : "text-gray-700 group-hover:text-darkSky"
+                      : "text-content group-hover:text-darkSky"
                   }`}
                 >
                   {link.title}
@@ -77,7 +77,7 @@ const SidebarLinks = () => {
             <div
               className={`transition-all duration-500 ease-in-out overflow-hidden ${
                 isDropdownOpen 
-                  ? 'max-h-48 opacity-100 translate-y-0' 
+                  ? 'max-h-fit opacity-100 translate-y-0' 
                   : 'max-h-0 opacity-0 -translate-y-2'
               }`}
             >
@@ -99,7 +99,7 @@ const SidebarLinks = () => {
                         className={`transition-all duration-300 ease-in-out text-sm ${
                           isNestedActive 
                             ? "text-darkSky transform scale-110" 
-                            : "text-smallHeading group-hover:text-darkSky"
+                            : "text-content group-hover:text-darkSky"
                         }`}
                       >
                         {nestedLink.icon}
@@ -108,7 +108,7 @@ const SidebarLinks = () => {
                         className={`transition-all duration-300 ease-in-out text-sm ${
                           isNestedActive 
                             ? "text-darkSky font-medium" 
-                            : " text-smallHeading group-hover:text-darkSky"
+                            : " text-content group-hover:text-darkSky"
                         }`}
                       >
                         {nestedLink.title}
