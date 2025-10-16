@@ -96,7 +96,7 @@ const SidebarLinks = ({ path, isCollapsed }) => {
                       <Link
                         key={nestedIndex}
                         to={nestedLink.path}
-                        className={`w-full rounded-lg py-2 px-3 flex items-center gap-3 transition-all duration-300 ease-in-out group ${
+                        className={`w-full rounded-lg py-2 px-3 text-nowrap flex items-center gap-3 transition-all duration-300 ease-in-out group ${
                           isNestedActive 
                             ? "bg-white" 
                             : "hover:bg-white"

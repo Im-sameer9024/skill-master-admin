@@ -6,6 +6,25 @@
 @theme{
     --color-lightSky:#DDF8F2;
     --color-darkSky:#65AF9E;
+
+    --color-mostLightGray:#DBDBDB;
+    --color-lightGray:#969696;
+    --color-darkGray:#808080;
+
+    --color-mostLightYellow:#FFFFB8;
+    --color-lightYellow:#FFFF2E;
+    --color-darkYellow:#FFFF00;
+
+
+    --color-mostLightBlue:#E6E6FF;
+    --color-lightBlue:#2E2EFF;
+    --color-darkBlue:#0000FF;
+
+    --color-mostLightRed:#FFB8B8;
+    --color-lightRed:#FF2E2E;
+    --color-darkRed:#FF0000;
+
+
     --color-content:#000000;
     --color-smallHeading:#9E9E9E;
     --font-fontContent: 'Inter', sans-serif;

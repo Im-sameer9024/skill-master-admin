@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 
 import React, { useState } from "react";
-import Input from "../../ui/Input";
 import { Avatar, Breadcrumbs, Button, Divider } from "@mui/material";
 import { Logout, Person, Email, Settings } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,13 +8,6 @@ import { Link } from "react-router-dom";
 
 const Navbar = ({ path }) => {
   const [isHovered, setIsHovered] = useState(false);
-
-  const pathArr = path
-    .toString()
-    .split("/")
-    .filter((item) => item !== "");
-
-  console.log(pathArr);
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -52,24 +44,9 @@ const Navbar = ({ path }) => {
   };
 
   return (
-    <div className={`bg-gray-100 py-4 px-10 w-full flex  items-center justify-end relative `}>
-      <div className=" absolute bottom-1 left-4  ">
-        <Breadcrumbs aria-label="breadcrumb">
-          {pathArr.map((item, index) => {
-            return (
-              <div
-                key={index}
-                className={`capitalize text-xl ${
-                  item === pathArr[pathArr.length - 1] ? "font-bold" : ""
-                } `}
-              >
-                {item}
-              </div>
-            );
-          })}
-        </Breadcrumbs>
-      </div>
-
+    <div
+      className={`bg-gray-100 py-4 px-10 w-full flex  items-center justify-end relative `}
+    >
       {/* avatar section with hover dropdown */}
       <div
         className="relative"

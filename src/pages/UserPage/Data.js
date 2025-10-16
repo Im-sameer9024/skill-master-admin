@@ -1,13 +1,14 @@
 
 
 
-export const userColumns = ["ID","NAME","EMAIL","PHONE"]
+
 export const userData = [
     {
         id: 1,
         name: "John Doe",
         email: "johndoe@example.com",
         phone: "123-456-7890"
+        
     },
     {
         id: 2,
@@ -21,3 +22,4 @@ export const userData = [
         phone: "555-555-5555"
     }
 ]
+

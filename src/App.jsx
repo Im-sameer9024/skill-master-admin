@@ -5,6 +5,7 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/Dashboard'
 import UserPage from './pages/UserPage'
 import NotFound from './pages/NotFound'
+import BlogPage from './pages/BlogPage'
 
 const App = () => {
   const path = useLocation().pathname;
@@ -45,6 +46,8 @@ const App = () => {
           <Routes>
             <Route path='/dashboard' element={<HomePage/>} />
             <Route path='/users' element={<UserPage/>}/>
+            <Route path='/blogs' element={<BlogPage/>}/>
+
 
             <Route path='*' element={<NotFound/>} />
 
