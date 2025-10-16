@@ -3,7 +3,6 @@
 
 @import "tailwindcss";
 
-
 @theme{
     --color-lightSky:#DDF8F2;
     --color-darkSky:#65AF9E;
@@ -13,7 +12,6 @@
     --font-fontHeading: "Playfair Display", serif;
 }
 
-
 body{
     max-width:"1920px";
     width: 100vw;
@@ -22,4 +20,26 @@ body{
     margin: auto;
 }
 
+/* Custom scrollbar styling */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
 
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}

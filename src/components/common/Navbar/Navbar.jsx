@@ -2,12 +2,20 @@
 
 import React, { useState } from "react";
 import Input from "../../ui/Input";
-import { Avatar, Button, Divider } from "@mui/material";
+import { Avatar, Breadcrumbs, Button, Divider } from "@mui/material";
 import { Logout, Person, Email, Settings } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
-const Navbar = () => {
+const Navbar = ({ path }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const pathArr = path
+    .toString()
+    .split("/")
+    .filter((item) => item !== "");
+
+  console.log(pathArr);
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -44,18 +52,33 @@ const Navbar = () => {
   };
 
   return (
-    <div className="bg-gray-100 py-4 px-10 w-full flex  items-center justify-end relative">
-      
+    <div className={`bg-gray-100 py-4 px-10 w-full flex  items-center justify-end relative `}>
+      <div className=" absolute bottom-1 left-4  ">
+        <Breadcrumbs aria-label="breadcrumb">
+          {pathArr.map((item, index) => {
+            return (
+              <div
+                key={index}
+                className={`capitalize text-xl ${
+                  item === pathArr[pathArr.length - 1] ? "font-bold" : ""
+                } `}
+              >
+                {item}
+              </div>
+            );
+          })}
+        </Breadcrumbs>
+      </div>
 
       {/* avatar section with hover dropdown */}
-      <div 
+      <div
         className="relative"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="hover:cursor-pointer  ">
-          <Avatar 
-            alt="Remy Sharp" 
+          <Avatar
+            alt="Remy Sharp"
             src="/static/images/avatar/1.jpg"
             className="transition-transform duration-200 hover:scale-110"
           />
@@ -76,8 +99,8 @@ const Navbar = () => {
               {/* User header */}
               <div className="bg-lightSky p-4 text-black rounded-t-xl">
                 <div className="flex items-center space-x-3">
-                  <Avatar 
-                    alt="Remy Sharp" 
+                  <Avatar
+                    alt="Remy Sharp"
                     src="/static/images/avatar/1.jpg"
                     className="w-12 h-12 border-2 border-white shadow-md"
                   />
@@ -94,7 +117,9 @@ const Navbar = () => {
                   <Person className="text-gray-400 text-xl" />
                   <div>
                     <p className="text-xs text-smallHeading">Full Name</p>
-                    <p className="text-sm font-medium text-content">Remy Sharp</p>
+                    <p className="text-sm font-medium text-content">
+                      Remy Sharp
+                    </p>
                   </div>
                 </div>
 
@@ -102,7 +127,9 @@ const Navbar = () => {
                   <Email className="text-gray-400 text-xl" />
                   <div>
                     <p className="text-xs text-smallHeading">Email Address</p>
-                    <p className="text-sm font-medium text-content">remy.sharp@example.com</p>
+                    <p className="text-sm font-medium text-content">
+                      remy.sharp@example.com
+                    </p>
                   </div>
                 </div>
               </div>
@@ -116,10 +143,10 @@ const Navbar = () => {
                   startIcon={<Settings />}
                   onClick={handleSettings}
                   className="justify-start px-3 py-2 !text-content hover:bg-smallHeading rounded-lg transition-colors duration-200"
-                  sx={{ 
-                    justifyContent: 'flex-start',
-                    textTransform: 'none',
-                    fontSize: '0.875rem',
+                  sx={{
+                    justifyContent: "flex-start",
+                    textTransform: "none",
+                    fontSize: "0.875rem",
                     fontWeight: 500,
                   }}
                 >
@@ -139,12 +166,12 @@ const Navbar = () => {
                   color="error"
                   className="rounded-lg transition-all duration-200 hover:shadow-md"
                   sx={{
-                    textTransform: 'none',
+                    textTransform: "none",
                     fontWeight: 600,
-                    borderWidth: '2px',
-                    '&:hover': {
-                      borderWidth: '2px',
-                    }
+                    borderWidth: "2px",
+                    "&:hover": {
+                      borderWidth: "2px",
+                    },
                   }}
                 >
                   Logout

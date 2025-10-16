@@ -13,7 +13,7 @@ import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 export const SidebarData = [
     {
         title: "Dashboard",
-        path: "/",
+        path: "/dashboard",
         icon: <HomeFilledIcon />
     },
     {
@@ -64,3 +64,5 @@ export const SidebarData = [
         icon: <DynamicFeedIcon />,
     },
 ]
+
+
