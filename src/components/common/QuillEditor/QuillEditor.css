@@ -1,0 +1,41 @@
+/* components/QuillEditor/QuillEditor.css */
+.quill-editor-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.quill-editor-container.read-only {
+  border: none;
+}
+
+.quill-editor-container.read-only .ql-toolbar {
+  display: none;
+}
+
+.quill-editor-container.read-only .ql-container {
+  border: none !important;
+}
+
+.ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.ql-container.ql-snow {
+  border: none;
+  font-size: 16px;
+  min-height: 200px;
+}
+
+.ql-editor {
+  font-family: inherit;
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+.ql-editor.ql-blank::before {
+  color: #94a3b8;
+  font-style: italic;
+}
