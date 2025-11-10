@@ -1,5 +1,4 @@
 import TableComponent from "@/components/common/TableComponent";
-import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MdOutlineVisibility } from "react-icons/md";
 import { CiEdit } from "react-icons/ci";
@@ -12,100 +11,84 @@ import {
 import { FaPlus } from "react-icons/fa6";
 import Spinner from "@/components/common/Spinner";
 import Popup from "@/components/common/Popup";
-import { useGetAllListening } from "./hooks/useListening";
-import { ListeningColumnsData } from "./Data";
+import ReactAudioPlayer from "react-audio-player";
 
 // Import your Listening components (you'll need to create these)
-import CreateListeningForm from "@/components/core/Listening/CreateListeningForm";
-import DeleteListening from "@/components/core/Listening/DeleteListening";
-import EditListening from "@/components/core/Listening/EditListening";
-import { Link } from "react-router-dom";
-import EditListeningStatus from "@/components/core/Listening/EditListeningStatus";
+import { Link, useParams } from "react-router-dom";
+import { ListeningItemAudioColumnsData } from "./Data";
+import { useGetSingleListeningItemById } from "../ListeningItems/hooks/useListeningItem";
 
-const ListeningPage = () => {
-  const [showCreateListening, setShowCreateListening] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditListening, setShowEditListening] = useState(false);
-  const [listeningId, setListeningId] = useState(null);
- const [showEditStatusModal, setShowEditStatusModal] = useState(false);
+const ListeningItemsAudios = () => {
+  const { listening_item_id } = useParams();
 
-  const { data: ListeningData, isLoading, error } = useGetAllListening();
+ 
+
+  const {
+    data: ListeningItemData,
+    isLoading,
+    error,
+  } = useGetSingleListeningItemById(listening_item_id);
 
 
-  const openEditStatusModal = (id) => {
-    setShowEditStatusModal(true);
-    setListeningId(id);
-  };
+  const{VITE_CLIENT_AUDIO_URL} = import.meta.env;
 
-  const openDeleteModal = (id) => {
-    setShowDeleteModal(true);
-    setListeningId(id);
-  };
-
-  const openEditModal = (id) => {
-    setShowEditListening(true);
-    setListeningId(id);
-  };
+  const audioUrl = `${VITE_CLIENT_AUDIO_URL}`
+  console.log("audioURl ",audioUrl);
+ 
 
   // Render row function with proper data mapping for Listening
-  const renderRow = (listening, index) => (
-    <tr key={listening._id || index}>
+  const renderRow = (audio, index) => (
+    <tr key={audio._id || index} className="border-b border-gray-200">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {index + 1}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-        <Link className=" hover:underline underline-offset-2" to={`/listening/items/${listening._id}`}>{listening.title}</Link>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            listening.isfree
-              ? "bg-green-100 text-green-800"
-              : "bg-blue-100 text-blue-800"
-          }`}
+        <Link
+          className="hover:underline underline-offset-2 "
+          to={`/listening/item/question/${listening_item_id}/${audio._id}`}
         >
-          {listening.isfree ? "Free" : "Paid"}
-        </span>
+          {`${audio.title.slice(0,30)}...`}
+        </Link>
       </td>
+
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {listening.listeningItems?.length || 0} / {listening.number_of_items}
+        {audio.questions?.length || 0}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-            listening.status === "active"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {listening.status}
-        </span>
-         {/* Edit */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() => openEditStatusModal(listening._id)}
-                variant="ghost"
-                size="icon-sm"
-                className="hover:bg-gray-200 rounded-full cursor-pointer"
-              >
-                <CiEdit className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Edit</p>
-            </TooltipContent>
-          </Tooltip>
+
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-80  ">
+       <div>
+         <ReactAudioPlayer 
+          src={`${audioUrl}/${audio?.audio_file}`} 
+          controls 
+          className="w-full"
+        />
+       </div>
+        {/* {`${audioUrl}/${audio?.audio_file}`} */}
       </td>
 
       {/*------------------ actions buttons -------------- */}
-      <td>
-        <div className="flex items-center gap-1">
-          {/* Edit */}
+      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() => openEditModal(listening._id)}
+                onClick={() => openSingleListeningItem(audio._id)}
+                variant="ghost"
+                size="icon-sm"
+                className="hover:bg-gray-200 rounded-full cursor-pointer"
+              >
+                <MdOutlineVisibility className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>See Details</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => openEditModal(audio._id)}
                 variant="ghost"
                 size="icon-sm"
                 className="hover:bg-gray-200 rounded-full cursor-pointer"
@@ -118,11 +101,10 @@ const ListeningPage = () => {
             </TooltipContent>
           </Tooltip>
 
-          {/* Delete */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() => openDeleteModal(listening._id)}
+                onClick={() => openDeleteModal(audio._id)}
                 variant="ghost"
                 size="icon-sm"
                 className="hover:bg-gray-200 rounded-full hover:text-destructive text-destructive/80 cursor-pointer"
@@ -135,14 +117,14 @@ const ListeningPage = () => {
             </TooltipContent>
           </Tooltip>
         </div>
-      </td>
+      </td> */}
     </tr>
   );
 
   //------------ Loading state ----------------------
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center ">
+      <div className="flex justify-center items-center min-h-64">
         <Spinner />
       </div>
     );
@@ -151,14 +133,14 @@ const ListeningPage = () => {
   //--------------- Error state----------------------
   if (error) {
     return (
-      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg  mx-auto">
+      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg mx-auto">
         <p className="text-red-800 font-semibold mb-2">
-          Error loading listening categories
+          Error loading listening items
         </p>
         <p className="text-red-600 text-sm mb-4">
           {error.response?.data?.message ||
             error.message ||
-            "Failed to load listening categories"}
+            "Failed to load listening items"}
         </p>
         <Button
           onClick={() => window.location.reload()}
@@ -175,72 +157,84 @@ const ListeningPage = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Listening Management
+            Listening Items Audio Management
           </h1>
           <p className="text-sm text-gray-600 mt-1">
-            Total Listening : {ListeningData?.data?.length || 0}
+            Total Items : {ListeningItemData?.data?.audios?.length || 0}
           </p>
         </div>
-        <Button
-          onClick={() => setShowCreateListening(true)}
+        {/* <Button
+          onClick={() => setShowCreateListeningItem(true)}
           className="bg-darkSky/90 hover:bg-darkSky text-white cursor-pointer hover:scale-95 transition-all duration-300 ease-in-out"
         >
           <FaPlus className="mr-2" />
-          Add New Listening
-        </Button>
+          Add New Listening Item
+        </Button> */}
       </div>
 
-      {/*----------- popup for listening listening create----------  */}
-      <Popup
-        openModal={showCreateListening}
+      {/*----------- popup for Single listening Item----------  */}
+      {/* <Popup
+        openModal={showSingleListeningItem}
         content={
-          <CreateListeningForm
-            setShowCreateListening={setShowCreateListening}
+          <SingleListeningItem
+            id={listeningItemId}
+            setShowSingleListeningItem={setShowSingleListeningItem}
           />
         }
         width={"w-[70%]"}
-      />
+      /> */}
 
-       {/*----------- popup for notification status update----------  */}
-      <Popup
+      {/*----------- popup for listening Item create----------  */}
+      {/* <Popup
+        openModal={showCreateListeningItem}
+        content={
+          <CreateListeningItemForm
+            setShowCreateListeningItem={setShowCreateListeningItem}
+          />
+        }
+        width={"w-[70%]"}
+      /> */}
+
+      {/*----------- popup for notification status update----------  */}
+      {/* <Popup
         openModal={showEditStatusModal}
         content={
-          <EditListeningStatus
-            id={listeningId}
+          <EditListeningItemStatus
+            id={listeningItemId}
             setShowEditStatusModal={setShowEditStatusModal}
           />
         }
         width={"w-[40%]"}
-      />
+      /> */}
 
       {/*----------- popup for listening listening delete----------  */}
-      <Popup
+      {/* <Popup
         openModal={showDeleteModal}
         content={
-          <DeleteListening
-            id={listeningId}
+          <DeleteListeningItem
+            id={listeningItemId}
             setShowDeleteModal={setShowDeleteModal}
           />
         }
         width={"w-[40%]"}
-      />
+      /> */}
 
       {/*----------- popup for listening listening edit----------  */}
-      <Popup
-        openModal={showEditListening}
+      {/* <Popup
+        openModal={showEditListeningItem}
         content={
-          <EditListening
-            id={listeningId}
-            setShowEditListening={setShowEditListening}
+          <EditListeningItem
+            id={listeningItemId}
+            setShowEditListeningItem={setShowEditListeningItem}
           />
         }
         width={"w-[70%]"}
-      />
+      /> */}
 
-      {ListeningData?.data?.length > 0 ? (
+      {ListeningItemData?.data?.audios?.length > 0 ? (
         <TableComponent
-          columns={ListeningColumnsData}
-          data={ListeningData.data}
+          columns={ListeningItemAudioColumnsData}
+          data={ListeningItemData?.data.audios}
           renderRow={renderRow}
         />
       ) : (
@@ -248,18 +242,18 @@ const ListeningPage = () => {
           <div className="max-w-md mx-auto">
             <div className="text-gray-400 text-6xl mb-4">🎵</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No Listening Categories Found
+              No Listening Items Found
             </h3>
             <p className="text-gray-500 mb-4">
-              There are no listening categories available yet. Create your first
-              listening to get started.
+              There are no listening items available yet. Create your first
+              listening item to get started.
             </p>
             <Button
-              onClick={() => setShowCreateListening(true)}
+              // onClick={() => setShowCreateListeningItem(true)}
               className="bg-darkSky/90 hover:bg-darkSky text-white"
             >
               <FaPlus className="mr-2" />
-              Create First listening
+              Create First Listening Item
             </Button>
           </div>
         </div>
@@ -268,4 +262,4 @@ const ListeningPage = () => {
   );
 };
 
-export default ListeningPage;
+export default ListeningItemsAudios;

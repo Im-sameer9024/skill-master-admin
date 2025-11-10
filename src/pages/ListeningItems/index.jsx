@@ -28,7 +28,7 @@ import EditListeningItem from "@/components/core/ListeningItems/EditListeningIte
 import SingleListeningItem from "@/components/core/ListeningItems/SingleListeningItem";
 
 const ListeningItemPage = () => {
-  const { id } = useParams();
+  const { listening_id } = useParams();
 
   // console.log("id", id);
 
@@ -43,7 +43,7 @@ const ListeningItemPage = () => {
     data: ListeningItemsData,
     isLoading,
     error,
-  } = useGetListeningItemsById(id);
+  } = useGetListeningItemsById(listening_id);
 
   // console.log("ListeningItemsData", ListeningItemsData);
 
@@ -76,18 +76,18 @@ const ListeningItemPage = () => {
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
         <Link
           className=" hover:underline underline-offset-2"
-          to={`/listening/item/question/${listeningItem._id}`}
+          to={`/listening/item/audios/${listeningItem._id}`}
         >
           {listeningItem.title}
         </Link>
       </td>
 
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-        {listeningItem.listeningQuestions?.length}
+        {listeningItem.audios?.length}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {listeningItem.totalTime} Min
-      </td>
+      </td> */}
 
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         <span
@@ -186,7 +186,7 @@ const ListeningItemPage = () => {
   //--------------- Error state----------------------
   if (error) {
     return (
-      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg max-w-4xl mx-auto">
+      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg  mx-auto">
         <p className="text-red-800 font-semibold mb-2">
           Error loading listening categories
         </p>

@@ -19,7 +19,7 @@ const GlobalProvider = ({ children }) => {
     <AppContextProvider>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
-          <Toaster position="top-right"  />
+          <Toaster position="top-right" />
           {children}
           {isDevelopment && <ReactQueryDevtools />}
         </QueryClientProvider>

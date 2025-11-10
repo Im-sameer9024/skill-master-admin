@@ -72,39 +72,79 @@ export const listeningApiEndPoint = {
   GET_LISTENING_BY_ID: (id) => `${BASE_URL}/listening/view/${id}`,
   CREATE_LISTENING: `${BASE_URL}/listening/create-listening`,
   UPDATE_LISTENING_BY_ID: (id) => `${BASE_URL}/listening/update/${id}`,
-  UPDATE_LISTENING_STATUS: (id) => `${BASE_URL}/listening/change-status/${id}`, 
+  UPDATE_LISTENING_STATUS: (id) => `${BASE_URL}/listening/change-status/${id}`,
   DELETE_LISTENING_BY_ID: (id) => `${BASE_URL}/listening/delete/${id}`,
-
 };
 
 //-------------------------------All listening item apis -----------------------
 
 export const listeningItemApiEndPoint = {
+  //--------- base on single  Listening Id------------
 
-  //--------- base on single  Listening Id------------ 
+  GET_ALL_LISTENING_ITEMS_BY_LISTENING_ID: (id) =>
+    `${BASE_URL}/listening-item/list/${id}`,
 
- GET_ALL_LISTENING_ITEMS_BY_LISTENING_ID:(id) =>  `${BASE_URL}/listening-item/list/${id}`,
+  //-----------------------Listening Item Id based -------------------------------
+  GET_SINGLE_LISTENING_ITEM_BY_ID: (id) =>
+    `${BASE_URL}/listening-item/view/${id}`,
 
- //-----------------------Listening Item Id based -------------------------------
- GET_SINGLE_LISTENING_ITEM_BY_ID: (id) => `${BASE_URL}/listening-item/view/${id}`,
-
- CREATE_LISTENING_ITEM: `${BASE_URL}/listening-item/create`,
- UPDATE_LISTENING_ITEM_BY_ID: (id) => `${BASE_URL}/listening-item/update/${id}`,
- UPDATE_LISTENING_ITEM_STATUS_BY_ID: (id) => `${BASE_URL}/listening-item/change-status/${id}`,
- DELETE_LISTENING_ITEM_BY_ID: (id) => `${BASE_URL}/listening-item/delete/${id}`,
-}
-
-
+  CREATE_LISTENING_ITEM: `${BASE_URL}/listening-item/create`,
+  UPDATE_LISTENING_ITEM_BY_ID: (id) =>
+    `${BASE_URL}/listening-item/update/${id}`,
+  UPDATE_LISTENING_ITEM_STATUS_BY_ID: (id) =>
+    `${BASE_URL}/listening-item/change-status/${id}`,
+  DELETE_LISTENING_ITEM_BY_ID: (id) =>
+    `${BASE_URL}/listening-item/delete/${id}`,
+};
 
 //-------------------------------All listening question apis -----------------------
 
 export const listeningQuestionApiEndPoint = {
-  GET_ALL_LISTENING_QUESTIONS:(id) => `${BASE_URL}/listening-question/list/${id}`,
-  GET_SINGLE_LISTENING_QUESTION_BY_ID: (id) => `${BASE_URL}/listening-question/view/${id}`,
-  CREATE_LISTENING_QUESTION: `${BASE_URL}/listening-question/create`,
-  UPDATE_LISTENING_QUESTIONS_BY_ID: (id) => `${BASE_URL}/listening-question/update/${id}`,
-  UPDATE_LISTENING_QUESTIONS_STATUS_BY_ID: (id) => `${BASE_URL}/listening-question/change-status/${id}`,
-  DELETE_LISTENING_QUESTIONS_BY_ID: (id) => `${BASE_URL}/listening-question/delete/${id}`,
+  GET_ALL_LISTENING_QUESTIONS: (id,audioId) =>
+    `${BASE_URL}/listening-item/audio-questions/${id}/${audioId}`,
+  GET_SINGLE_LISTENING_QUESTION_BY_ID: (id) =>
+    `${BASE_URL}/listening-question/view/${id}`,
+  CREATE_LISTENING_QUESTION: (id,audioId) => `${BASE_URL}/listening-question/create/${id}/${audioId}`,
+  UPDATE_LISTENING_QUESTIONS_BY_ID: (id) =>
+    `${BASE_URL}/listening-question/update/${id}`,
+  UPDATE_LISTENING_QUESTIONS_STATUS_BY_ID: (id) =>
+    `${BASE_URL}/listening-question/change-status/${id}`,
+  DELETE_LISTENING_QUESTIONS_BY_ID: (id) =>
+    `${BASE_URL}/listening-question/delete/${id}`,
+};
+
+//-----------------------------All Reading apis ----------------------------
+
+export const readingApiEndPoint = {
+  GET_ALL_READING: `${BASE_URL}/reading/list`,
+  GET_SINGLE_READING_BY_ID: (id) => `${BASE_URL}/reading/view/${id}`,
+  CREATE_READING: `${BASE_URL}/reading/create-reading`,
+  UPDATE_READING_BY_ID: (id) => `${BASE_URL}/reading/update/${id}`,
+  UPDATE_READING_STATUS: (id) => `${BASE_URL}/reading/change-status/${id}`,
+  DELETE_READING_BY_ID: (id) => `${BASE_URL}/reading/delete/${id}`,
+};
+
+
+
+//-------------------------------All Reading item apis -----------------------
+
+export const readingItemApiEndPoint = {
+  GET_ALL_READING_ITEMS_BY_READING_ID: (id) => `${BASE_URL}/reading-item/list/${id}`,
+  GET_SINGLE_READING_ITEM_BY_ID: (id) => `${BASE_URL}/reading-item/view/${id}`,
+  CREATE_READING_ITEM: `${BASE_URL}/reading-item/create`,
+  UPDATE_READING_ITEM_BY_ID: (id) => `${BASE_URL}/reading-item/update/${id}`,
+  UPDATE_READING_ITEM_STATUS_BY_ID: (id) => `${BASE_URL}/reading-item/change-status/${id}`,
+  DELETE_READING_ITEM_BY_ID: (id) => `${BASE_URL}/reading-item/delete/${id}`,
 }
 
 
+//----------------------------------All Reading question apis -----------------------
+
+export const readingQuestionApiEndPoint = {
+  GET_ALL_READING_ITEM_QUESTIONS: (id) => `${BASE_URL}/reading-question/list/${id}`,
+  GET_SINGLE_READING_QUESTION_BY_ID: (id) => `${BASE_URL}/reading-question/view/${id}`,
+  CREATE_READING_QUESTION: `${BASE_URL}/reading-question/create`,
+  UPDATE_READING_QUESTION_BY_ID: (id) => `${BASE_URL}/reading-question/update/${id}`,
+  UPDATE_READING_QUESTION_STATUS_BY_ID: (id) => `${BASE_URL}/reading-question/change-status/${id}`,
+  DELETE_READING_QUESTION_BY_ID: (id) => `${BASE_URL}/reading-question/delete/${id}`,
+}

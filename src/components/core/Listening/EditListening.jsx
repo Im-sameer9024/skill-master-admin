@@ -18,14 +18,13 @@ import { useForm } from "react-hook-form";
 import { IoClose } from "react-icons/io5";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import Spinner from "@/components/common/Spinner";
 import { useEffect } from "react";
 
 const EditListening = ({ id, setShowEditListening }) => {
-  //------------- api for data ---------
+  //------------- API for data ---------
   const { data: SingleListening, isLoading: SingleListeningLoading } =
     useGetListeningById(id);
-
-  // console.log("single ",SingleListening);
 
   const {
     mutate: updateListening,
@@ -49,41 +48,40 @@ const EditListening = ({ id, setShowEditListening }) => {
     },
   });
 
-
-
-  // Add this useEffect to populate form with existing data
-  useEffect(() => {
-    if (SingleListening && SingleListening.data) {
-      reset({
-        title: SingleListening.data.title,
-        isfree: SingleListening.data?.isfree,
-        number_of_items: SingleListening.data.number_of_items,
-        status: SingleListening.data?.status,
-      });
-    }
-  }, [SingleListening, reset]);
-
-    const selectedIsFree = watch("isfree");
+  const selectedIsFree = watch("isfree");
   const selectedStatus = watch("status");
 
+  // Populate form with current values
+  useEffect(() => {
+    if (SingleListening?.data) {
+      setValue("title", SingleListening.data?.title || "");
+      setValue("isfree", SingleListening.data?.isfree?.toString() || "");
+      setValue(
+        "number_of_items",
+        SingleListening.data?.number_of_items?.toString() || ""
+      );
+      setValue("status", SingleListening.data?.status || "");
+    }
+  }, [SingleListening, setValue]);
+
   const onSubmit = (data) => {
-    // console.log("Update data:", data);
+    console.log("Update data:", data);
 
-    // Convert isfree from string to boolean and ensure number_of_items is number
-    const updateData = {
-      ...data,
-      isfree: data.isfree === "true", // Convert to boolean
-      number_of_items: data.number_of_items
-        ? parseInt(data.number_of_items)
-        : null,
+    // Convert isfree from string to boolean and number_of_items to number
+    const submitData = {
+      title: data.title,
+      isfree: data.isfree === "true",
+      number_of_items:
+        data.number_of_items && data.number_of_items !== ""
+          ? Number(data.number_of_items)
+          : null,
+      status: data.status,
     };
-
-    // console.log("Final update data:", updateData);
 
     updateListening(
       {
         id: id,
-        data: updateData,
+        data: submitData,
       },
       {
         onSuccess: () => {
@@ -93,7 +91,7 @@ const EditListening = ({ id, setShowEditListening }) => {
         },
         onError: (error) => {
           toast.error(
-            error.response?.data?.message || "Failed to update listening"
+            error?.response?.data?.message || "Failed to update listening"
           );
         },
       }
@@ -105,16 +103,8 @@ const EditListening = ({ id, setShowEditListening }) => {
     reset();
   };
 
-  // Show loading state while fetching data
   if (SingleListeningLoading) {
-    return (
-      <div className="font-fontContent p-6 max-h-[90vh] overflow-y-auto flex justify-center items-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <p>Loading listening data...</p>
-        </div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (
@@ -138,19 +128,19 @@ const EditListening = ({ id, setShowEditListening }) => {
       </div>
 
       {/*------------ Current Listening Section ------------ */}
-      {SingleListening && (
+      {SingleListening?.data && (
         <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold  mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
             Current Listening Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex  items-baseline gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-sm font-medium text-gray-700">Title:</span>
               <p className="text-gray-900 font-semibold">
                 {SingleListening.data.title || "No title"}
               </p>
             </div>
-            <div className=" flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-sm font-medium text-gray-700">Type:</span>
               <div className="flex items-center gap-2">
                 <span className="text-gray-900 font-semibold">
@@ -158,15 +148,15 @@ const EditListening = ({ id, setShowEditListening }) => {
                 </span>
               </div>
             </div>
-            <div className=" flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-sm font-medium text-gray-700">
                 Number of Items:
               </span>
-              <p className="text-gray-900 font-semibold mt-1">
-                {SingleListening?.data?.number_of_items || "N/A"}
+              <p className="text-gray-900 font-semibold">
+                {SingleListening.data.number_of_items || "N/A"}
               </p>
             </div>
-            <div className=" flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-sm font-medium text-gray-700">Status:</span>
               <div className="flex items-center gap-2">
                 <span
@@ -201,7 +191,7 @@ const EditListening = ({ id, setShowEditListening }) => {
                 Error updating listening
               </h3>
               <p className="text-sm text-red-600 mt-1">
-                {apiError.response?.data?.message ||
+                {apiError?.response?.data?.message ||
                   "Failed to update listening"}
               </p>
             </div>
@@ -229,20 +219,19 @@ const EditListening = ({ id, setShowEditListening }) => {
               }`}
               disabled={isUpdating}
               {...register("title", {
-                required: "Title is required",
+                required: "Category title is required",
                 minLength: {
                   value: 2,
                   message: "Title must be at least 2 characters",
                 },
                 maxLength: {
                   value: 100,
-                  message: "Title cannot exceed 100 characters",
+                  message: "Title must not exceed 100 characters",
                 },
               })}
             />
             {errors.title && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <IoClose className="h-3 w-3" />
+              <p className="text-sm text-red-600 mt-1">
                 {errors.title.message}
               </p>
             )}
@@ -254,10 +243,17 @@ const EditListening = ({ id, setShowEditListening }) => {
               htmlFor="isfree"
               className="text-sm font-medium text-gray-700"
             >
-              Type *
+              Plan Type *
             </Label>
+            {/* Hidden input for react-hook-form validation */}
+            <input
+              type="hidden"
+              {...register("isfree", {
+                required: "Plan type is required",
+              })}
+            />
             <Select
-              onValueChange={(value) => setValue("isfree", value)}
+              onValueChange={(value) => setValue("isfree", value, { shouldValidate: true })}
               disabled={isUpdating}
               value={selectedIsFree}
             >
@@ -266,20 +262,20 @@ const EditListening = ({ id, setShowEditListening }) => {
                   errors.isfree ? "border-red-500 focus:ring-red-500" : ""
                 }`}
               >
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Select plan type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Plan Type</SelectLabel>
-                  <SelectItem value={true} className="cursor-pointer">
+                  <SelectItem value="true" className="cursor-pointer">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       Free
                     </div>
                   </SelectItem>
-                  <SelectItem value={false} className="cursor-pointer">
+                  <SelectItem value="false" className="cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       Paid
                     </div>
                   </SelectItem>
@@ -287,14 +283,10 @@ const EditListening = ({ id, setShowEditListening }) => {
               </SelectContent>
             </Select>
             {errors.isfree && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <IoClose className="h-3 w-3" />
+              <p className="text-sm text-red-600 mt-1">
                 {errors.isfree.message}
               </p>
             )}
-            <p className="text-xs text-gray-500">
-              Select whether this category is free or requires payment
-            </p>
           </div>
 
           {/*------------- Number of Items ------------ */}
@@ -308,7 +300,7 @@ const EditListening = ({ id, setShowEditListening }) => {
             <Input
               id="number_of_items"
               type="number"
-              placeholder="Enter Number of Items"
+              placeholder="Enter number of items"
               className={`w-full ${
                 errors.number_of_items
                   ? "border-red-500 focus:ring-red-500"
@@ -324,21 +316,19 @@ const EditListening = ({ id, setShowEditListening }) => {
                   value: 1000,
                   message: "Number of items cannot exceed 1000",
                 },
-                pattern: {
-                  value: /^[0-9]*$/,
-                  message: "Please enter a valid number",
+                validate: {
+                  isNumber: (value) => {
+                    if (value === "" || value === null || value === undefined) return true;
+                    return !isNaN(Number(value)) || "Must be a valid number";
+                  },
                 },
               })}
             />
             {errors.number_of_items && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <IoClose className="h-3 w-3" />
+              <p className="text-sm text-red-600 mt-1">
                 {errors.number_of_items.message}
               </p>
             )}
-            <p className="text-xs text-gray-500">
-              Enter the number of items in this listening category (0-30)
-            </p>
           </div>
 
           {/*---------------------- Status ------------------- */}
@@ -349,8 +339,15 @@ const EditListening = ({ id, setShowEditListening }) => {
             >
               Status *
             </Label>
+            {/* Hidden input for react-hook-form */}
+            <input
+              type="hidden"
+              {...register("status", {
+                required: "Status is required",
+              })}
+            />
             <Select
-              onValueChange={(value) => setValue("status", value)}
+              onValueChange={(value) => setValue("status", value, { shouldValidate: true })}
               disabled={isUpdating}
               value={selectedStatus}
             >
@@ -380,14 +377,10 @@ const EditListening = ({ id, setShowEditListening }) => {
               </SelectContent>
             </Select>
             {errors.status && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <IoClose className="h-3 w-3" />
+              <p className="text-sm text-red-600 mt-1">
                 {errors.status.message}
               </p>
             )}
-            <p className="text-xs text-gray-500">
-              Choose the current status of the listening category
-            </p>
           </div>
         </div>
 

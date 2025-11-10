@@ -1,9 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // components/QuillEditor/QuillEditor.jsx
 import React, { useEffect, useRef } from "react";
-import Quill from "quill";
+// import Quill from "quill";
+
+import ReactQuill, { Quill } from "react-quill";
 import "quill/dist/quill.snow.css";
-import "./QuillEditor.css"; // Create this CSS file
+import ImageResize from "quill-image-resize-module-react"; // Use the correct package name
+import "./QuillEditor.css";
+
+// Register the image resize module
+Quill.register("modules/imageResize", ImageResize);
 
 const QuillEditor = ({
   value,
@@ -16,30 +22,40 @@ const QuillEditor = ({
 
   useEffect(() => {
     if (editorRef.current && !quillRef.current) {
-      // Initialize Quill editor
+      const modules = {
+        toolbar: readOnly
+          ? false
+          : [
+              [{ header: [1, 2, 3, 4, 5, 6, false] }],
+              [{ font: [] }],
+              [{ size: ["small", false, "large", "huge"] }],
+              ["bold", "italic", "underline", "strike"],
+              [{ color: [] }, { background: [] }],
+              [{ script: "sub" }, { script: "super" }],
+              [{ list: "ordered" }, { list: "bullet" }],
+              [{ indent: "-1" }, { indent: "+1" }],
+              [{ align: [] }],
+              ["blockquote", "code-block"],
+              ["link", "image", "video"],
+              ["clean"],
+            ],
+        clipboard: {
+          matchVisual: false,
+        },
+      };
+
+      // Only add imageResize if not readOnly
+      if (!readOnly) {
+        modules.imageResize = {
+          parchment: Quill.import("parchment"),
+          modules: ["Resize", "DisplaySize", "Toolbar"],
+        };
+      }
+
+      // Initialize Quill editor with image resize
       quillRef.current = new Quill(editorRef.current, {
         theme: "snow",
-        modules: {
-          toolbar: readOnly
-            ? false
-            : [
-                [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                [{ font: [] }],
-                [{ size: ["small", false, "large", "huge"] }],
-                ["bold", "italic", "underline", "strike"],
-                [{ color: [] }, { background: [] }],
-                [{ script: "sub" }, { script: "super" }],
-                [{ list: "ordered" }, { list: "bullet" }],
-                [{ indent: "-1" }, { indent: "+1" }],
-                [{ align: [] }],
-                ["blockquote", "code-block"],
-                ["link", "image", "video"],
-                ["clean"],
-              ],
-          clipboard: {
-            matchVisual: false,
-          },
-        },
+        modules: modules,
         formats: [
           "header",
           "font",

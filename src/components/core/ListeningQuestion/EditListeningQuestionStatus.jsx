@@ -18,7 +18,7 @@ const EditListeningQuestionStatus = ({ id, setShowEditStatusModal }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { data: listeningQuestionData, isLoading: listeningQuestionLoading } = useGetSingleListeningQuestionById(id);
-    const { mutate: updateStatus, isPending: isUpdating } = useUpdateListeningQuestionStatusById();
+    const { mutate: updateStatus, isPending: isUpdating } = useUpdateListeningQuestionStatusById(id);
 
     console.log("Listening Question Data:", listeningQuestionData);
 

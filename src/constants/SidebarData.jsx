@@ -8,7 +8,10 @@ import {
     FaFileContract, 
     FaShieldAlt, 
     FaQuestionCircle, 
-    FaBlog 
+    FaBlog, 
+    FaBookOpen,
+    FaPenFancy,
+    FaMicrophone
 } from 'react-icons/fa';
 import { BiSolidCategoryAlt } from "react-icons/bi";
 import { FaMusic } from "react-icons/fa6";
@@ -75,5 +78,20 @@ export const SidebarData = [
         title: "Listening",
         path: "/listening",
         icon: <FaMusic />
+    },
+    {
+        title:"Reading",
+        path:"/reading",
+        icon:<FaBookOpen />
+    },
+    {
+        title:"Writing",
+        path:"/writing",
+        icon:<FaPenFancy />
+    },
+    {
+        title:"Speaking",
+        path:"/speaking",
+        icon:<FaMicrophone />
     }
 ]

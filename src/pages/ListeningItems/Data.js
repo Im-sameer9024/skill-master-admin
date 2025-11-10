@@ -1,12 +1,7 @@
-
-
-
-
 export const ListeningItemColumnsData = [
   "ID",
   "TITLE",
-  "TOTAL QUESTIONS",
-  "Time",
+  "TOTAL AUDIOS",
   "STATUS",
-  "ACTIONS"
-]
+  "ACTIONS",
+];

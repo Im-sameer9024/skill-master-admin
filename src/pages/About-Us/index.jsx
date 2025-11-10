@@ -23,11 +23,8 @@ const AboutUsPage = () => {
   //------------ Loading state ----------------------
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <Spinner />
-          <p className="mt-2 text-gray-600">Loading content...</p>
-        </div>
+      <div className="flex justify-center items-center ">
+        <Spinner />
       </div>
     );
   }
@@ -35,7 +32,7 @@ const AboutUsPage = () => {
   //--------------- Error state----------------------
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className=" mx-auto p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <h3 className="text-red-800 font-semibold mb-2">
             Error Loading Content
@@ -80,7 +77,7 @@ const AboutUsPage = () => {
         setIsEditing(false);
         // console.log("Update successful:", response);
         // alert("Content updated successfully!");
-        toast.success("Content updated successfully!",response?.data?.message);
+        toast.success("Content updated successfully!", response?.data?.message);
       },
       onError: (error) => {
         console.error("Error updating content:", error);

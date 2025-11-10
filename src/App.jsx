@@ -18,6 +18,9 @@ const NotificationPage = lazy(() => import("./pages/Notification"));
 const CategoryPage = lazy(() => import("./pages/Category"));
 const ListeningPage = lazy(() => import("./pages/Listening"));
 const ListeningItemsPage = lazy(() => import("./pages/ListeningItems"));
+const ListeningItemsAudioPage = lazy(() =>
+  import("./pages/ListeningItemsAudio")
+);
 const ListeningQuestionsPage = lazy(() => import("./pages/ListeningQuestions"));
 
 const App = () => {
@@ -60,11 +63,15 @@ const App = () => {
               {/* ----------------------Listening routes-----------------------  */}
               <Route path="/listening" element={<ListeningPage />} />
               <Route
-                path="/listening/item/:id"
+                path="/listening/items/:listening_id"
                 element={<ListeningItemsPage />}
               />
               <Route
-                path="/listening/item/question/:id"
+                path="/listening/item/audios/:listening_item_id"
+                element={<ListeningItemsAudioPage />}
+              />
+              <Route
+                path="/listening/item/question/:listening_item_id/:audio_id"
                 element={<ListeningQuestionsPage />}
               />
 

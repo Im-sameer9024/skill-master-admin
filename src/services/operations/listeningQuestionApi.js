@@ -13,10 +13,10 @@ const {
 export const listeningQuestionApi = {
   //-------------------------get all Listening Questions by Id --------------------------
 
-  getAllListeningItemQuestionsById: async (listeningItemId) => {
+  getAllListeningItemQuestionsById: async (listeningItemId,audioId) => {
     const response = await apiConnector(
       "GET",
-      GET_ALL_LISTENING_QUESTIONS(listeningItemId)
+      GET_ALL_LISTENING_QUESTIONS(listeningItemId,audioId)
     );
     return response.data;
   },
@@ -33,10 +33,10 @@ export const listeningQuestionApi = {
 
   //-----------------------Create Listening Question---------------------
 
-  createListeningQuestion: async (data) => {
+  createListeningQuestion: async (data,id,audioId) => {
     const response = await apiConnector(
       "POST",
-      CREATE_LISTENING_QUESTION,
+      CREATE_LISTENING_QUESTION(id,audioId),
       data
     );
     return response.data;

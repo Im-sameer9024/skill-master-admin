@@ -24,10 +24,7 @@ const FaqPage = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
           <Spinner />
-          <p className="mt-2 text-gray-600">Loading content...</p>
-        </div>
       </div>
     );
   }

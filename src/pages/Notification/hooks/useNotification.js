@@ -42,8 +42,9 @@ export const useUpdateStatusNotification = (id, data) => {
 
   return useMutation({
     mutationFn: () => notificationApis.updateNotificationById(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["notification"]);
+      queryClient.invalidateQueries(["notification", data.id]);
     },
     onError: (error) => {
       console.error("Error updating notification status:", error);
@@ -60,6 +61,7 @@ export const useDeleteNotification = () => {
     mutationFn: (id) => notificationApis.deleteNotificationById(id),
     onSuccess: () => {
       queryClient.invalidateQueries(["notification"]);
+
     },
     onError: (error) => {
       console.error("Error deleting notification:", error);

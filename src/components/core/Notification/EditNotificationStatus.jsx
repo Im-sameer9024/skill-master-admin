@@ -103,8 +103,13 @@ const EditNotificationStatus = ({ id, setShowEditStatusModal }) => {
       {notificationData?.data && (
         <div className="mb-4 p-3 bg-gray-50 rounded-md">
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Title:</span>{" "}
+            <span className="font-medium">Title: </span>
             {notificationData.data.title}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Status: </span>
+            
+            {notificationData.data.status}
           </p>
         </div>
       )}

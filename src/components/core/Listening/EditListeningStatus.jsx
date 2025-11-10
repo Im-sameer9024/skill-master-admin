@@ -18,7 +18,6 @@ const EditListeningStatus = ({ id, setShowEditStatusModal }) => {
   // Fetch current listening data
   const { data: listeningData, isLoading: isLoadingListening } = useGetListeningById(id);
 
-  console.log("listen",listeningData);
 
   // Update status mutation
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateListeningStatusById();

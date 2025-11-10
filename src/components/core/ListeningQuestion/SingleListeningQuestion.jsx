@@ -1,16 +1,42 @@
 import { useGetSingleListeningQuestionById } from "@/pages/ListeningQuestions/hooks/useListeningQuestions";
 import React from "react";
-import { Loader2, CheckCircle2, XCircle, Clock, Hash } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Volume2,
+  Play,
+  Pause,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IoClose } from "react-icons/io5";
+import ReactAudioPlayer from "react-audio-player";
 
 const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
+  console.log("id", id);
+
+  const { VITE_CLIENT_AUDIO_URL } = import.meta.env;
 
   const {
     data: SingleQuestion,
     isLoading,
     error,
   } = useGetSingleListeningQuestionById(id);
+
+  
+
+  // Function to render HTML content with images
+  const renderHTMLWithImages = (htmlContent) => {
+    if (!htmlContent) return null;
+
+    return (
+      <div
+        className="prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
+    );
+  };
 
   if (isLoading) {
     return (
@@ -49,15 +75,24 @@ const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
   }
 
   const question = SingleQuestion.data;
+  const audioUrl = `${VITE_CLIENT_AUDIO_URL}/${question.audioFile}`;
 
   const handleCancel = () => {
     setShowSingleQuestion(false);
   };
 
   return (
-    <div className=" mx-auto p-6 bg-white rounded-lg ">
+    <div className="mx-auto p-6 bg-white rounded-lg max-w-4xl">
       {/* Header */}
-      <div className="flex justify-end mb-6 pb-4 ">
+      <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Question Details
+          </h1>
+          <p className="text-gray-600">
+            Complete information about the listening question
+          </p>
+        </div>
         <Button
           onClick={handleCancel}
           variant="ghost"
@@ -69,18 +104,8 @@ const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
         </Button>
       </div>
 
-      {/* Header Section */}
-      <div className="border-b border-gray-200 pb-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Question Details
-        </h1>
-        <p className="text-gray-600">
-          Complete information about the listening question
-        </p>
-      </div>
-
       {/* Basic Information Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Status Badge */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
@@ -113,34 +138,53 @@ const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
           </p>
         </div>
 
-        {/* Created Date */}
+        {/* Time */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-4 w-4 text-purple-600" />
-            <span className="text-sm font-medium text-gray-700">Created</span>
+            <Clock className="h-4 w-4 text-orange-600" />
+            <span className="text-sm font-medium text-gray-700">Time</span>
           </div>
-          <p className="text-sm font-medium text-gray-900">
-            {new Date(question.createdAt).toLocaleDateString()}
+          <p className="text-lg font-semibold text-gray-900">
+            {question.time} seconds
+          </p>
+        </div>
+
+        {/* Sequence */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-gray-700">Sequence</span>
+          </div>
+          <p className="text-lg font-semibold text-gray-900">
+            {question.sequence}
           </p>
         </div>
       </div>
 
-      {/* Question Title */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-            Question
-          </span>
-        </h2>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-gray-900 text-lg font-medium">{question.title}</p>
+      {/* Audio File Section */}
+      {question.audioFile && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Volume2 className="h-5 w-5 text-blue-600" />
+            Audio File
+          </h2>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1">
+                <ReactAudioPlayer
+                  src={`${audioUrl}`}
+                  controls
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Options Section */}
+      {/* Options Section with Images */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Options</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {question.options.map((option, index) => {
             const optionLetter = String.fromCharCode(65 + index); // A, B, C, D
             const isCorrect = option.isCorrect;
@@ -154,7 +198,7 @@ const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
                     : "bg-gray-50 border-gray-200"
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -167,13 +211,18 @@ const SingleListeningQuestion = ({ id, setShowSingleQuestion }) => {
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       Option {optionLetter}
+                      {isCorrect && (
+                        <span className="ml-2 text-green-600 text-xs font-normal">
+                          (Correct)
+                        </span>
+                      )}
                     </span>
                   </div>
                   {isCorrect && (
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                   )}
                 </div>
-                <p className="text-gray-900 font-medium pl-11">{option.text}</p>
+                <div className="pl-2">{renderHTMLWithImages(option.text)}</div>
               </div>
             );
           })}

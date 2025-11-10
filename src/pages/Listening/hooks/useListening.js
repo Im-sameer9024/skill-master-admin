@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 //---------------------------------get all Listening ------------------------------
 export const useGetAllListening = () => {
   return useQuery({
-    queryKey: ["listening"],
+    queryKey: ["AllListening"],
     queryFn: () => listeningApis.getAllListening(),
   });
 };
@@ -13,7 +13,7 @@ export const useGetAllListening = () => {
 
 export const useGetListeningById = (id) => {
   return useQuery({
-    queryKey: ["listening", id],
+    queryKey: ["Listening", id],
     queryFn: () => listeningApis.getListeningById(id),
     enabled: !!id, //only run the query if id is provided
   });
@@ -26,8 +26,10 @@ export const useDeleteListeningById = () => {
 
   return useMutation({
     mutationFn: (id) => listeningApis.deleteListeningById(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["listening"]);
+    onSuccess: (data,id) => {
+      queryClient.invalidateQueries({queryKey:["AllListening"]});
+      queryClient.invalidateQueries({queryKey:["Listening",id]});
+
     },
     onError: (error) => {
       console.log("Error occur to delete listening", error);
@@ -43,7 +45,8 @@ export const useCreateListening = () => {
   return useMutation({
     mutationFn: (data) => listeningApis.createListening(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["listening"]);
+      queryClient.invalidateQueries({queryKey:["AllListening"]});
+
     },
     onError: (error) => {
       console.log("Error occur to create listening", error);
@@ -58,8 +61,11 @@ export const useUpdateListeningById = () => {
 
   return useMutation({
     mutationFn: ({ id, data }) => listeningApis.updateListeningById(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["listening"]);
+    onSuccess: (data,variables) => {
+      console.log("variables",variables.id);
+      queryClient.invalidateQueries({queryKey:["AllListening"]});
+      queryClient.invalidateQueries({queryKey:["Listening",variables.id]});
+
     },
     onError: (error) => {
       console.log("Error occur to update listening", error);
@@ -75,8 +81,10 @@ export const useUpdateListeningStatusById = () => {
   return useMutation({
     mutationFn: ({ id, data }) =>
       listeningApis.updateListeningStatusById(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["listening"]);
+    onSuccess: (data,variables) => {
+      queryClient.invalidateQueries({queryKey:["AllListening"]});
+      queryClient.invalidateQueries({queryKey:["Listening",variables.id]});
+
     },
     onError: (error) => {
       console.log("Error occur to update listening", error);

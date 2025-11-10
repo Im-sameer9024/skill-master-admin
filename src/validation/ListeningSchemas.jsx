@@ -6,11 +6,12 @@ export const createListeningItemSchema = z
     title: z
       .string()
       .min(2, "Title must be at least 2 characters")
-      .max(100, "Title must be less than 100 characters")
-      .regex(
-        /^[a-zA-Z0-9\s\-_]+$/,
-        "Title can only contain letters, numbers, spaces, hyphens, and underscores"
-      ),
+      .max(100, "Title must be less than 100 characters"),
+
+    audio_title: z
+      .string()
+      .min(2, "Audio title must be at least 2 characters")
+      .max(100, "Audio title must be less than 100 characters"),
 
     fileType: z.enum(["audio", "video"], {
       required_error: "File type is required",
@@ -25,15 +26,15 @@ export const createListeningItemSchema = z
         return file?.size <= maxSize;
       }, "File size must be less than 100MB"),
 
-    totalTime: z
+    instructions: z
       .string()
-      .min(1, "Total time is required")
-      .refine(
-        (val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 120,
-        {
-          message: "Total time must be between 1 and 120 minutes",
-        }
-      ),
+      .min(10, "Instructions must be greater than 10 characters"),
+    
+
+    description: z
+      .string()
+      .min(10, "Description must be greater than 10 characters")
+      ,
 
     status: z.enum(["active", "inactive"], {
       required_error: "Status is required",
@@ -57,16 +58,30 @@ export const createListeningItemSchema = z
       message: "File format does not match selected file type",
       path: ["file"],
     }
+  )
+  .refine(
+    (data) => {
+      // Ensure title and audio_title are different
+      return data.title !== data.audio_title;
+    },
+    {
+      message: "Item title and audio title should be different",
+      path: ["audio_title"],
+    }
   );
 
 //-------------------zod validation schema for update listening Item-------------------------
 
 
-  export const updateListeningItemSchema = z.object({
+export const updateListeningItemSchema = z.object({
   title: z.string()
     .min(2, "Title must be at least 2 characters")
-    .max(100, "Title must be less than 100 characters")
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Title can only contain letters, numbers, spaces, hyphens, and underscores"),
+    .max(100, "Title must be less than 100 characters"),
+  
+  audio_title: z.string()
+    .min(2, "Audio title must be at least 2 characters")
+    .max(100, "Audio title must be less than 100 characters")
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Audio title can only contain letters, numbers, spaces, hyphens, and underscores"),
   
   fileType: z.enum(["audio", "video"], {
     required_error: "File type is required",
@@ -82,11 +97,28 @@ export const createListeningItemSchema = z
       return file?.size <= maxSize;
     }, "File size must be less than 100MB"),
   
-  totalTime: z.string()
-    .min(1, "Total time is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 120, {
-      message: "Total time must be between 1 and 120 minutes"
-    }),
+  instructions: z.string()
+    .min(1, "Instructions are required")
+    .refine((value) => {
+      // Check if instructions have actual content (not just HTML tags)
+      const hasTextContent = value
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .trim().length > 0;
+      return hasTextContent;
+    }, "Instructions must contain actual text content"),
+  
+  description: z.string()
+    .optional()
+    .refine((value) => {
+      if (!value) return true; // Optional field
+      // Check if description has actual content (not just HTML tags)
+      const hasTextContent = value
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .trim().length > 0;
+      return hasTextContent;
+    }, "Description must contain actual text content"),
   
   status: z.enum(["active", "inactive"], {
     required_error: "Status is required",

@@ -3,11 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 //----------------------hook for get all questions by listening Item id --------------------
 
-export const useGetListeningQuestionsById = (id) => {
+export const useGetListeningQuestionsById = (id,audioId) => {
   return useQuery({
-    queryKey: ["listeningQuestions", id],
-    queryFn: () => listeningQuestionApi.getAllListeningItemQuestionsById(id),
-    enabled: !!id,
+    queryKey: ["listeningQuestions", id,audioId],
+    queryFn: () => listeningQuestionApi.getAllListeningItemQuestionsById(id,audioId),
+    enabled: !!id && !!audioId,
   });
 };
 
@@ -23,13 +23,13 @@ export const useGetSingleListeningQuestionById = (id) => {
 
 //----------------------hook for create new question ---------------------------
 
-export const useCreateListeningQuestion = () => {
+export const useCreateListeningQuestion = (id,audioId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => listeningQuestionApi.createListeningQuestion(data),
+    mutationFn: (data) => listeningQuestionApi.createListeningQuestion(data,id,audioId),
     onSuccess: () => {
-      queryClient.invalidateQueries(["listeningQuestions"]);
+      queryClient.invalidateQueries(["listeningQuestions",id,audioId]);
     },
     onError: (error) => {
       console.log("Error occur to create listening question", error);
@@ -39,14 +39,14 @@ export const useCreateListeningQuestion = () => {
 
 //----------------------hook for update question by Id ---------------------------
 
-export const useUpdateListeningQuestionById = () => {
+export const useUpdateListeningQuestionById = (id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }) =>
       listeningQuestionApi.updateListeningQuestionById(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["listeningQuestions"]);
+      queryClient.invalidateQueries(["listeningQuestions",id]);
     },
     onError: (error) => {
       console.log("Error occur to update listening question", error);
@@ -56,14 +56,14 @@ export const useUpdateListeningQuestionById = () => {
 
 //---------------------hook for update question status by Id ---------------------------
 
-export const useUpdateListeningQuestionStatusById = () => {
+export const useUpdateListeningQuestionStatusById = (id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }) =>
       listeningQuestionApi.updateListeningQuestionStatusById(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["listeningQuestions"]);
+      queryClient.invalidateQueries(["listeningQuestions",id]);
     },
     onError: (error) => {
       console.log("Error occur to update listening question", error);

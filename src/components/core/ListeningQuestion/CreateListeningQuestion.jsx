@@ -16,28 +16,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { IoClose } from "react-icons/io5";
-import { Loader2, Plus, Trash2, AlertCircle, X, Play, Save } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  AlertCircle,
+  X,
+  Play,
+  Save,
+} from "lucide-react";
 import { toast } from "sonner";
 import QuillEditor from "@/components/common/QuillEditor/QuillEditor";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createListeningQuestionSchema } from "@/validation/ListeningQuestionSchemas";
 
 const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
-  const { id } = useParams(); // listening_item_id
+  const { listening_item_id, audio_id } = useParams();
 
   const [audioPreview, setAudioPreview] = useState(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
-  const [optionContents, setOptionContents] = useState({}); // Separate state for option contents
-  const [savedOptions, setSavedOptions] = useState({}); // Track which options are saved
-  const [titleContent, setTitleContent] = useState(""); // Separate state for title content
-  const [isTitleSaved, setIsTitleSaved] = useState(true); // Track if title is saved
+  const [optionContents, setOptionContents] = useState({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   //---------------------api for create Listening Question ----------------------
   const {
     mutate: createListeningQuestion,
     isPending: isSubmitting,
     error: apiError,
-  } = useCreateListeningQuestion();
+  } = useCreateListeningQuestion(listening_item_id, audio_id);
 
   const {
     register,
@@ -52,6 +58,8 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
     resolver: zodResolver(createListeningQuestionSchema),
     defaultValues: {
       title: "",
+      type: "text",
+      titleAudio: null,
       options: [
         { text: "", isCorrect: false },
         { text: "", isCorrect: false },
@@ -59,198 +67,116 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
         { text: "", isCorrect: false },
       ],
       answer: "",
-      type: "text",
-      audioFile: null,
+      time: 30,
       status: "active",
     },
   });
 
-  const audioFile = watch("audioFile");
-  const selectedType = watch("type");
+  const titleAudio = watch("titleAudio");
   const selectedStatus = watch("status");
   const options = watch("options") || [];
   const answer = watch("answer");
-  const formTitle = watch("title");
+  const watchedTitleType = watch("titleType");
 
-  // Initialize option contents and title
+  // Initialize option contents
   useEffect(() => {
-    const initialContents = {};
-    const initialSaved = {};
-    options.forEach((option, index) => {
-      initialContents[index] = option?.text || "";
-      initialSaved[index] = true; // Mark as saved initially if there's content
-    });
-    setOptionContents(initialContents);
-    setSavedOptions(initialSaved);
-    
-    // Initialize title content
-    setTitleContent(formTitle || "");
-    setIsTitleSaved(true);
-  }, []);
-
-  // Handle title content change (local state only)
-  const handleTitleChange = useCallback((value) => {
-    setTitleContent(value);
-    setIsTitleSaved(false); // Mark as unsaved when content changes
-  }, []);
-
-  // Save title to form state
-  const saveTitle = async () => {
-    setValue("title", titleContent);
-    setIsTitleSaved(true);
-    
-    // Trigger validation
-    await trigger("title");
-    toast.success("Title saved successfully!");
-  };
-
-  // Handle option content change (local state only)
-  const handleOptionContentChange = useCallback((index, value) => {
-    setOptionContents(prev => ({
-      ...prev,
-      [index]: value
-    }));
-    // Mark as unsaved when content changes
-    setSavedOptions(prev => ({
-      ...prev,
-      [index]: false
-    }));
-  }, []);
-
-  // Save individual option to form state
-  const saveOption = async (index) => {
-    const content = optionContents[index] || "";
-    
-    // Update form state
-    const newOptions = [...options];
-    newOptions[index] = {
-      ...newOptions[index],
-      text: content,
-    };
-    setValue("options", newOptions);
-
-    // Mark as saved
-    setSavedOptions(prev => ({
-      ...prev,
-      [index]: true
-    }));
-
-    // Trigger validation
-    await trigger(`options.${index}.text`);
-    await trigger("options");
-
-    toast.success(`Option ${String.fromCharCode(65 + index)} saved successfully!`);
-  };
-
-  // Save all options and title
-  const saveAll = async () => {
-    let hasChanges = false;
-
-    // Save title if unsaved
-    if (!isTitleSaved) {
-      setValue("title", titleContent);
-      setIsTitleSaved(true);
-      hasChanges = true;
+    const initContents = {};
+    for (let i = 0; i < 4; i++) {
+      initContents[i] = "";
     }
+    setOptionContents(initContents);
+    setHasUnsavedChanges(false);
+  }, []);
 
-    // Save options
+  // Handle title type change
+  const handleTitleTypeChange = async (value) => {
+    setValue("titleType", value);
+    clearErrors(["title", "titleAudio"]);
+
+    if (value === "text") {
+      setValue("titleAudio", null);
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl);
+        setAudioPreviewUrl("");
+        setAudioPreview(null);
+      }
+    } else {
+      setValue("title", "");
+    }
+    
+    // Trigger validation after changing type
+    await trigger("titleType");
+  };
+
+  // Handle option content change
+  const handleOptionContentChange = useCallback((index, value) => {
+    setOptionContents((prev) => ({
+      ...prev,
+      [index]: value,
+    }));
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Save all content to form state
+  const saveAll = async () => {
+    let changed = false;
     const newOptions = [...options];
-    options.forEach((_, index) => {
-      const content = optionContents[index] || "";
-      if (newOptions[index].text !== content) {
-        newOptions[index] = {
-          ...newOptions[index],
-          text: content,
-        };
-        hasChanges = true;
+
+    options.forEach((opt, i) => {
+      const localContent = optionContents[i] || "";
+      if (opt.text !== localContent) {
+        newOptions[i] = { ...opt, text: localContent };
+        changed = true;
       }
     });
 
-    if (hasChanges) {
-      setValue("options", newOptions);
-      
-      // Mark all as saved
-      const allSaved = {};
-      options.forEach((_, index) => {
-        allSaved[index] = true;
-      });
-      setSavedOptions(allSaved);
-
-      await trigger(["title", "options"]);
-      toast.success("All changes saved successfully!");
-    } else {
-      toast.info("No changes to save.");
+    if (changed) {
+      setValue("options", newOptions, { shouldValidate: true });
+      setHasUnsavedChanges(false);
+      const isValid = await trigger("options");
+      if (isValid) {
+        toast.success("All changes saved!");
+      }
+      return isValid;
     }
+    return true;
   };
 
-  //---------------------------------handle submit function -----------------------------------
+  // Handle title audio file change
+  const handleTitleAudioChange = async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Basic validation
+      if (!file.type.startsWith("audio/")) {
+        toast.error("Please select an audio file");
+        setValue("titleAudio", null);
+        return;
+      }
 
-  const onSubmit = async (data) => {
-    // First, save all unsaved content (title and options)
-    await saveAll();
-    
-    // Re-trigger validation to get latest state
-    const isValid = await trigger();
-    
-    if (!isValid) {
-      toast.error("Please fix validation errors before submitting.");
-      return;
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error("File size must be less than 50MB");
+        setValue("titleAudio", null);
+        return;
+      }
+
+      clearErrors("titleAudio");
+      await trigger("titleAudio");
     }
-
-    const formData = new FormData();
-
-    // Append basic fields
-    formData.append("listening_item_id", id);
-    formData.append("title", data.title);
-    formData.append("answer", data.answer);
-    formData.append("status", data.status);
-    formData.append("type", data.type);
-    formData.append("sequence", "1");
-
-    // Append audio file if type is audio
-    if (data.type === "audio" && data.audioFile && data.audioFile[0]) {
-      formData.append("audioFile", data.audioFile[0]);
-    }
-
-    // Append options
-    data.options.forEach((option, index) => {
-      formData.append(`options[${index}][text]`, option.text);
-      formData.append(
-        `options[${index}][isCorrect]`,
-        option.isCorrect.toString()
-      );
-    });
-
-    console.log("Submitting data:", data);
-
-    // createListeningQuestion(formData, {
-    //   onSuccess: () => {
-    //     toast.success("Listening question created successfully!");
-    //     setShowCreateListeningQuestion(false);
-    //     reset();
-    //     setOptionContents({});
-    //     setSavedOptions({});
-    //     setTitleContent("");
-    //     setIsTitleSaved(true);
-    //     if (audioPreviewUrl) {
-    //       URL.revokeObjectURL(audioPreviewUrl);
-    //     }
-    //   },
-    //   onError: (error) => {
-    //     toast.error(
-    //       error.response?.data?.message || "Failed to create listening question"
-    //     );
-    //   },
-    // });
   };
 
   // Handle audio preview
   useEffect(() => {
-    if (audioFile && audioFile.length > 0) {
-      const file = audioFile[0];
+    if (watchedTitleType === "audio" && titleAudio && titleAudio.length > 0) {
+      const file = titleAudio[0];
       const url = URL.createObjectURL(file);
       setAudioPreviewUrl(url);
-      setAudioPreview({ type: "audio", url });
+      setAudioPreview({
+        type: "audio",
+        url: url,
+        file: file,
+      });
     } else {
       setAudioPreview(null);
       if (audioPreviewUrl) {
@@ -260,58 +186,90 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
     }
 
     return () => {
-      if (audioPreviewUrl) {
-        URL.revokeObjectURL(audioPreviewUrl);
-      }
+      if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
     };
-  }, [audioFile]);
-
-  const handleAudioChange = async (e) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      
-      // Validate file type
-      if (!file.type.startsWith('audio/')) {
-        toast.error("Please select an audio file");
-        setValue("audioFile", null);
-        return;
-      }
-
-      // Validate file size (50MB)
-      const maxSize = 50 * 1024 * 1024;
-      if (file.size > maxSize) {
-        toast.error("File size must be less than 50MB");
-        setValue("audioFile", null);
-        return;
-      }
-
-      clearErrors("audioFile");
-      await trigger("audioFile");
-    }
-  };
+  }, [titleAudio, watchedTitleType]);
 
   const removeAudioPreview = () => {
-    setValue("audioFile", null);
+    setValue("titleAudio", null);
     setAudioPreview(null);
     if (audioPreviewUrl) {
       URL.revokeObjectURL(audioPreviewUrl);
       setAudioPreviewUrl("");
     }
-    clearErrors("audioFile");
+    clearErrors("titleAudio");
+  };
+
+  // Handle submit function
+  const onSubmit = async (data) => {
+    console.log("Submit triggered!", data); // Debug log
+    
+    // Save unsaved changes first
+    if (hasUnsavedChanges) {
+      const saved = await saveAll();
+      if (!saved) {
+        toast.error("Please fix option errors before submitting.");
+        return;
+      }
+    }
+
+    // Get the latest form values after saving
+    const currentOptions = watch("options");
+    
+    // Validate all fields
+    const isValid = await trigger();
+    if (!isValid) {
+      console.log("Validation errors:", errors); // Debug log
+      toast.error("Please fix all validation errors before submitting.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("titleType", data.titleType);
+    formData.append("answer", data.answer);
+    formData.append("status", data.status);
+    formData.append("time", data.time);
+    formData.append("sequence", "1");
+
+    if (data.titleType === "text") {
+      formData.append("title", data.title);
+    } else if (data.titleType === "audio" && data.titleAudio && data.titleAudio[0]) {
+      formData.append("titleAudio", data.titleAudio[0]);
+    }
+
+    // Use currentOptions to ensure we have the latest saved data
+    currentOptions.forEach((option, index) => {
+      formData.append(`options[${index}][text]`, option.text);
+      formData.append(`options[${index}][isCorrect]`, option.isCorrect);
+    });
+
+    console.log("Submitting form data..."); // Debug log
+
+    createListeningQuestion(formData, {
+      onSuccess: () => {
+        toast.success("Listening question created successfully!");
+        setShowCreateListeningQuestion(false);
+        reset();
+        setOptionContents({});
+        setHasUnsavedChanges(false);
+        if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+      },
+      onError: (error) => {
+        console.error("Submission error:", error); // Debug log
+        toast.error(
+          error.response?.data?.message || "Failed to create listening question"
+        );
+      },
+    });
   };
 
   const handleCorrectAnswerChange = async (index) => {
-    const newOptions = options.map((option, i) => ({
-      ...option,
+    const newOptions = options.map((opt, i) => ({
+      ...opt,
       isCorrect: i === index,
     }));
-    setValue("options", newOptions);
-
-    // Set answer to corresponding letter (a, b, c, d)
-    const answerLetter = String.fromCharCode(97 + index);
-    setValue("answer", answerLetter);
-    
+    setValue("options", newOptions, { shouldValidate: true });
+    setValue("answer", String.fromCharCode(97 + index));
     await trigger(["options", "answer"]);
   };
 
@@ -319,18 +277,8 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
     if (options.length < 4) {
       const newOptions = [...options, { text: "", isCorrect: false }];
       setValue("options", newOptions);
-      
-      // Update local state for the new option
-      const newIndex = newOptions.length - 1;
-      setOptionContents(prev => ({
-        ...prev,
-        [newIndex]: ""
-      }));
-      setSavedOptions(prev => ({
-        ...prev,
-        [newIndex]: true
-      }));
-      
+      setOptionContents((prev) => ({ ...prev, [newOptions.length - 1]: "" }));
+      setHasUnsavedChanges(true);
       await trigger("options");
     }
   };
@@ -340,11 +288,9 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
       const newOptions = options.filter((_, i) => i !== index);
       setValue("options", newOptions);
 
-      // Update local state
-      setOptionContents(prev => {
+      setOptionContents((prev) => {
         const newContents = { ...prev };
         delete newContents[index];
-        // Reindex the contents
         const reindexedContents = {};
         newOptions.forEach((_, newIndex) => {
           const oldIndex = newIndex >= index ? newIndex + 1 : newIndex;
@@ -353,24 +299,12 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
         return reindexedContents;
       });
 
-      setSavedOptions(prev => {
-        const newSaved = { ...prev };
-        delete newSaved[index];
-        // Reindex the saved states
-        const reindexedSaved = {};
-        newOptions.forEach((_, newIndex) => {
-          const oldIndex = newIndex >= index ? newIndex + 1 : newIndex;
-          reindexedSaved[newIndex] = newSaved[oldIndex] || true;
-        });
-        return reindexedSaved;
-      });
+      setHasUnsavedChanges(true);
 
-      // If removed option was correct, update answer
       if (options[index].isCorrect) {
         const correctIndex = newOptions.findIndex((opt) => opt.isCorrect);
         if (correctIndex !== -1) {
-          const answerLetter = String.fromCharCode(97 + correctIndex);
-          setValue("answer", answerLetter);
+          setValue("answer", String.fromCharCode(97 + correctIndex));
         } else {
           setValue("answer", "");
         }
@@ -384,36 +318,29 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
     setShowCreateListeningQuestion(false);
     reset();
     setOptionContents({});
-    setSavedOptions({});
-    setTitleContent("");
-    setIsTitleSaved(true);
-
-    // Clean up preview URL
-    if (audioPreviewUrl) {
-      URL.revokeObjectURL(audioPreviewUrl);
-    }
+    setHasUnsavedChanges(false);
+    if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
   };
 
-  // Check if any content is unsaved
-  const hasUnsavedContent = !isTitleSaved || Object.values(savedOptions).some(saved => !saved);
+  
 
   return (
     <div className="font-fontContent p-6 max-h-[90vh] overflow-y-auto">
-      {/*------------------ Header----------------- */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
             Create New Listening Question
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            Add a new listening question with rich text support
+            Add a new listening question with flexible title format
           </p>
         </div>
         <Button
           onClick={handleCancel}
           variant="ghost"
           size="icon"
-          className="h-9 w-9 hover:bg-gray-100 rounded-full transition-colors"
+          className="h-9 w-9 hover:bg-gray-100 rounded-full"
           type="button"
           disabled={isSubmitting}
         >
@@ -421,20 +348,17 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
         </Button>
       </div>
 
-      {/*-------------- API Error Message--------------- */}
+      {/* API Error Message */}
       {apiError && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center">
-            <div className="shrink-0">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-            </div>
+            <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
                 Error creating listening question
               </h3>
               <p className="text-sm text-red-600 mt-1">
-                {apiError.response?.data?.message ||
-                  "Failed to create listening question"}
+                {apiError.response?.data?.message || "Failed to create listening question"}
               </p>
             </div>
           </div>
@@ -442,65 +366,188 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/*------------------- Question Title with QuillEditor------------------------------ */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-              Question Title *
+        {/* Title Type Selection */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="titleType" className="text-sm font-medium text-gray-700">
+              Title Type *
             </Label>
-            <div className="flex items-center gap-2">
-              {!isTitleSaved && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={saveTitle}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700"
-                >
-                  <Save className="h-3 w-3" />
-                  Save Title
-                </Button>
-              )}
-              {!isTitleSaved && (
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  Unsaved
-                </span>
+            <Select
+              value={watchedTitleType}
+              onValueChange={handleTitleTypeChange}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select title type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Title Type</SelectLabel>
+                  <SelectItem value="text">Text Title</SelectItem>
+                  <SelectItem value="audio">Audio Title</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            {errors.titleType && (
+              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors.titleType.message}
+              </p>
+            )}
+          </div>
+
+          {/* Title Field Based on Type */}
+          {watchedTitleType === "text" ? (
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                Question Title (Text) *
+              </Label>
+              <Input
+                id="title"
+                type="text"
+                placeholder="Enter question title..."
+                className={errors.title ? "border-red-500" : ""}
+                disabled={isSubmitting}
+                {...register("title")}
+              />
+              {errors.title && (
+                <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.title.message}
+                </p>
               )}
             </div>
-          </div>
-          <QuillEditor
-            value={titleContent}
-            onChange={handleTitleChange}
-            placeholder="Enter your question title here..."
-          />
-          {errors.title && (
-            <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {errors.title.message}
-            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="titleAudio" className="text-sm font-medium text-gray-700">
+                  Question Title (Audio) *
+                </Label>
+                <Input
+                  id="titleAudio"
+                  type="file"
+                  accept="audio/*"
+                  className={errors.titleAudio ? "border-red-500" : ""}
+                  disabled={isSubmitting}
+                  {...register("titleAudio", {
+                    onChange: handleTitleAudioChange,
+                  })}
+                />
+                {errors.titleAudio && (
+                  <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.titleAudio.message}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Supported formats: MP3, WAV, AAC. Max file size: 50MB
+                </p>
+              </div>
+
+              {/* Audio Preview */}
+              {audioPreview && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Audio Preview
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeAudioPreview}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-white rounded border">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <Play className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {audioPreview.file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Audio file • {(audioPreview.file.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <audio controls className="h-8">
+                      <source src={audioPreview.url} type={audioPreview.file.type} />
+                    </audio>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/*--------------- Options Section--------------------- */}
+        {/* Time and Status Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="time" className="text-sm font-medium text-gray-700">
+              Time (seconds) *
+            </Label>
+            <Input
+              id="time"
+              type="number"
+              min="1"
+              max="300"
+              placeholder="30"
+              className={errors.time ? "border-red-500" : ""}
+              disabled={isSubmitting}
+              {...register("time", { valueAsNumber: true })}
+            />
+            {errors.time && (
+              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors.time.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 w-full">
+            <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+              Status *
+            </Label>
+            <Select
+              onValueChange={(value) => setValue("status", value)}
+              disabled={isSubmitting}
+              value={selectedStatus}
+              className="w-full"
+            >
+              <SelectTrigger className={errors.status ? "border-red-500 w-full" : "w-full"}>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            {errors.status && (
+              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {errors.status.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Options Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700">
               Options * (Minimum 2, Maximum 4)
             </Label>
             <div className="flex items-center gap-2">
-              {hasUnsavedContent && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={saveAll}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100"
-                >
-                  <Save className="h-4 w-4" />
-                  Save All
-                </Button>
+              {hasUnsavedChanges && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                  Unsaved Changes
+                </span>
               )}
               {options.length < 4 && (
                 <Button
@@ -520,14 +567,11 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
 
           <div className="space-y-3">
             {options.map((option, index) => {
-              const optionLetter = String.fromCharCode(65 + index); // A, B, C, D
-              const isSaved = savedOptions[index];
+              const optionLetter = String.fromCharCode(65 + index);
+              const currentContent = optionContents[index] || "";
 
               return (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3"
-                >
+                <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
@@ -536,42 +580,18 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
                       <span className="text-sm font-medium text-gray-700">
                         Option {optionLetter}
                       </span>
-                      {!isSaved && (
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                          Unsaved
-                        </span>
-                      )}
                     </div>
-
                     <div className="flex items-center gap-2">
-                      {!isSaved && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => saveOption(index)}
-                          disabled={isSubmitting}
-                          className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700"
-                        >
-                          <Save className="h-3 w-3" />
-                          Save
-                        </Button>
-                      )}
                       <Button
                         type="button"
                         variant={option.isCorrect ? "default" : "outline"}
                         size="sm"
                         onClick={() => handleCorrectAnswerChange(index)}
                         disabled={isSubmitting}
-                        className={
-                          option.isCorrect
-                            ? "bg-green-600 hover:bg-green-700"
-                            : ""
-                        }
+                        className={option.isCorrect ? "bg-green-600 hover:bg-green-700" : ""}
                       >
                         {option.isCorrect ? "Correct" : "Mark Correct"}
                       </Button>
-
                       {options.length > 2 && (
                         <Button
                           type="button"
@@ -587,17 +607,15 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
                     </div>
                   </div>
 
-                  {/* Option Content - Separate state for each editor */}
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-700">
                       Option Content *
                     </Label>
                     <QuillEditor
-                      value={optionContents[index] || ""}
+                      value={currentContent}
                       onChange={(value) => handleOptionContentChange(index, value)}
                       placeholder={`Enter option ${optionLetter} content...`}
                       height="150px"
-                      key={`option-${index}`}
                     />
                     {errors.options?.[index]?.text && (
                       <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
@@ -611,153 +629,34 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
             })}
           </div>
 
-          {/* Validation Errors */}
-          {errors.options &&
-            typeof errors.options === "object" &&
-            !Array.isArray(errors.options) && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.options.message}
-              </p>
-            )}
+          {hasUnsavedChanges && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={saveAll}
+              disabled={isSubmitting}
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700"
+            >
+              <Save className="h-4 w-4" />
+              Save All Options
+            </Button>
+          )}
 
-          {/* Selected Answer Display */}
+          {errors.options && (
+            <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.options.message || errors.options.root?.message}
+            </p>
+          )}
+
           {answer && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800">
-                <span className="font-medium">Selected Answer:</span> Option{" "}
-                {answer.toUpperCase()}
+                <span className="font-medium">Selected Answer:</span> Option {answer.toUpperCase()}
               </p>
             </div>
           )}
-        </div>
-
-        {/*---------------- Type for audio Field -------------- */}
-        <div className="space-y-2">
-          <Label htmlFor="type" className="text-sm font-medium text-gray-700">
-            Type
-          </Label>
-          <Select
-            onValueChange={(value) => setValue("type", value)}
-            disabled={isSubmitting}
-            value={selectedType}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Type</SelectLabel>
-                <SelectItem value="text" className="cursor-pointer">
-                  Text
-                </SelectItem>
-                <SelectItem value="audio" className="cursor-pointer">
-                  Audio
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/*---------------- audio field ------------ */}
-        {selectedType === "audio" && (
-          <div className="space-y-2">
-            <Label htmlFor="audioFile" className="text-sm font-medium text-gray-700">
-              Audio File *
-            </Label>
-            <Input
-              id="audioFile"
-              type="file"
-              accept="audio/*"
-              className={`w-full ${
-                errors.audioFile ? "border-red-500 focus:ring-red-500" : ""
-              }`}
-              disabled={isSubmitting}
-              {...register("audioFile", {
-                onChange: handleAudioChange,
-              })}
-            />
-            {errors.audioFile && (
-              <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.audioFile.message}
-              </p>
-            )}
-            <p className="text-xs text-gray-500">
-              Supported formats: MP3, WAV, AAC. Max file size: 50MB
-            </p>
-          </div>
-        )}
-
-        {/*------------------- Audio Preview------------------------- */}
-        {audioPreview && (
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <div className="flex items-center justify-between mb-3">
-              <Label className="text-sm font-medium text-gray-700">
-                Audio Preview
-              </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={removeAudioPreview}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-white rounded border">
-              <div className="p-2 bg-blue-100 rounded-full">
-                <Play className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {audioFile[0]?.name}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Audio file • {(audioFile[0]?.size / (1024 * 1024)).toFixed(2)}{" "}
-                  MB
-                </p>
-              </div>
-              <audio controls className="h-8">
-                <source src={audioPreview.url} type={audioFile[0]?.type} />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          </div>
-        )}
-
-        {/*----------------------- Status Field----------------------- */}
-        <div className="space-y-2">
-          <Label htmlFor="status" className="text-sm font-medium text-gray-700">
-            Status
-          </Label>
-          <Select
-            onValueChange={(value) => setValue("status", value)}
-            disabled={isSubmitting}
-            value={selectedStatus}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Status</SelectLabel>
-                <SelectItem value="active" className="cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Active
-                  </div>
-                </SelectItem>
-                <SelectItem value="inactive" className="cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    Inactive
-                  </div>
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Action Buttons */}
@@ -767,14 +666,14 @@ const CreateListeningQuestion = ({ setShowCreateListeningQuestion }) => {
             variant="outline"
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="min-w-[100px] hover:bg-gray-50 transition-colors"
+            className="min-w-[100px]"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="min-w-[100px] bg-darkSky hover:bg-darkSky/90 text-white transition-colors"
+            className="min-w-[100px] bg-darkSky hover:bg-darkSky/90 text-white"
           >
             {isSubmitting ? (
               <>

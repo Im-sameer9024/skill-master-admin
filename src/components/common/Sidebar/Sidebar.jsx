@@ -12,30 +12,36 @@ const Sidebar = ({ path }) => {
 
   return (
     <div
-      className={` bg-lightSky h-screen relative transition-all duration-300 ease-in-out border-r border-gray-200 ${
+      className={`bg-lightSky min-h-screen relative transition-all duration-300 ease-in-out border-r border-gray-200 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
-      {/*----------- logo ------------ */}
-      <div
-        className={`mx-auto mt-5 transition-all duration-300 ${
-          isCollapsed ? "w-10 px-2" : "w-22 px-4"
-        }`}
-      >
-        <img
-          src={Logo}
-          alt="logo"
-          className="w-full h-full object-cover transition-all duration-300"
-        />
-      </div>
+      {/* Scrollable Container */}
+      <div className="h-screen flex flex-col">
+        {/*----------- logo ------------ */}
+        <div
+          className={`mx-auto mt-5 transition-all duration-300 shrink-0 ${
+            isCollapsed ? "w-10 px-2" : "w-22 px-4"
+          }`}
+        >
+          <img
+            src={Logo}
+            alt="logo"
+            className="w-full h-full object-cover transition-all duration-300"
+          />
+        </div>
 
-      {/*------------------ all links ---------------------- */}
-      <div
-        className={`flex flex-col gap-2 mt-6 font-sans ${
-          isCollapsed ? "px-2" : "px-4"
-        }`}
-      >
-        <SidebarLinks path={path} isCollapsed={isCollapsed} />
+        {/*------------------ all links ---------------------- */}
+        <div
+          className={`flex flex-col gap-2 mt-6 font-sans flex-1 overflow-hidden ${
+            isCollapsed ? "px-2" : "px-4"
+          }`}
+        >
+          {/* Scrollable links container with hidden scrollbar */}
+          <div className="h-full overflow-y-auto hide-scrollbar">
+            <SidebarLinks path={path} isCollapsed={isCollapsed} />
+          </div>
+        </div>
       </div>
 
       {/* Toggle Button */}
@@ -49,6 +55,16 @@ const Sidebar = ({ path }) => {
           <FaChevronLeft className="w-3 h-3 text-gray-600" />
         )}
       </button>
+
+      <style jsx>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

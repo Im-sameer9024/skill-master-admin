@@ -34,29 +34,30 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
   } = useForm({
     defaultValues: {
       title: "",
-      isfree: null,
-      number_of_items: null,
-      status:""
+      isfree: "", // String "false" = Paid (default)
+      number_of_items: "",
+      status: "", // Default status is active
     },
   });
 
   const selectedIsFree = watch("isfree");
-  const selectedStatus = watch("status")
+  const selectedStatus = watch("status");
 
   const onSubmit = (data) => {
-    console.log("data of submitting", data);
 
-    // Convert isfree from string to boolean
+    // Convert isfree from string to boolean and number_of_items to number
     const submitData = {
       ...data,
-      isfree: data.isfree === "true", // Convert to boolean
+      isfree: data.isfree === "true", // Convert "true"/"false" string to boolean
+      number_of_items: data.number_of_items && !isNaN(Number(data.number_of_items))
+        ? Number(data.number_of_items)
+        : null,
     };
 
-    console.log("data", submitData);
 
     createListening(submitData, {
       onSuccess: () => {
-        toast.success("Listening category created successfully!");
+        toast.success("Listening created successfully!");
         setShowCreateListening(false);
         reset();
       },
@@ -134,8 +135,19 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
                 errors.title ? "border-red-500 focus:ring-red-500" : ""
               }`}
               disabled={isSubmitting}
-              {...register("title")}
+              {...register("title", {
+                required: "Category title is required",
+                minLength: {
+                  value: 2,
+                  message: "Title must be at least 2 characters",
+                },
+              })}
             />
+            {errors.title && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.title.message}
+              </p>
+            )}
           </div>
 
           {/* Plan Type Field */}
@@ -146,8 +158,21 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
             >
               Plan Type *
             </Label>
+            {/* Hidden input for react-hook-form validation */}
+            <input
+              type="hidden"
+              {...register("isfree", {
+                required: "Plan type is required",
+              })}
+            />
             <Select
-              onValueChange={(value) => setValue("isfree", value)}
+              onValueChange={(value) =>
+                setValue("isfree", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true,
+                })
+              }
               disabled={isSubmitting}
               value={selectedIsFree}
             >
@@ -176,13 +201,17 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
+            {errors.isfree && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.isfree.message}
+              </p>
+            )}
           </div>
 
           {/*------------- number of items ------------ */}
-          <div>
-
+          <div className="space-y-2">
             <Label
-              htmlFor="title"
+              htmlFor="number_of_items"
               className="text-sm font-medium text-gray-700"
             >
               Number of Items
@@ -192,37 +221,61 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
               type="number"
               placeholder="Enter Number of Items"
               className={`w-full ${
-                errors.title ? "border-red-500 focus:ring-red-500" : ""
+                errors.number_of_items
+                  ? "border-red-500 focus:ring-red-500"
+                  : ""
               }`}
               disabled={isSubmitting}
-              {...register("number_of_items")}
+              {...register("number_of_items", {
+                min: {
+                  value: 0,
+                  message: "Number of items cannot be negative",
+                },
+                max: {
+                  value: 1000,
+                  message: "Number of items cannot exceed 1000",
+                },
+                valueAsNumber: true,
+              })}
             />
-
+            {errors.number_of_items && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.number_of_items.message}
+              </p>
+            )}
           </div>
 
-          {/*---------------------- Plan status ------------------- */}
+          {/*---------------------- Status ------------------- */}
           <div className="space-y-2">
             <Label
               htmlFor="status"
               className="text-sm font-medium text-gray-700"
             >
-              Plan Status 
+              Status
             </Label>
+            {/* Hidden input for react-hook-form */}
+            <input type="hidden" {...register("status")} />
             <Select
-              onValueChange={(value) => setValue("status", value)}
+              onValueChange={(value) =>
+                setValue("status", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true,
+                })
+              }
               disabled={isSubmitting}
               value={selectedStatus}
             >
               <SelectTrigger
                 className={`w-full ${
-                  errors.isfree ? "border-red-500 focus:ring-red-500" : ""
+                  errors.status ? "border-red-500 focus:ring-red-500" : ""
                 }`}
               >
-                <SelectValue placeholder="Select plan status" />
+                <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Plan Type</SelectLabel>
+                  <SelectLabel>Status</SelectLabel>
                   <SelectItem value="active" className="cursor-pointer">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -231,13 +284,18 @@ const CreateListeningForm = ({ setShowCreateListening }) => {
                   </SelectItem>
                   <SelectItem value="inactive" className="cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      InActive
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      Inactive
                     </div>
                   </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            {errors.status && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.status.message}
+              </p>
+            )}
           </div>
         </div>
 

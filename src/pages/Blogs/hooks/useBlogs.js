@@ -15,10 +15,9 @@ export const useCreateBlog = () => {
   return useMutation({
     mutationFn: (data) => blogApi.createBlog(data),
 
-    onSuccess: (data) => {
+    onSuccess: () => {
       // invalidate and refetch blogs queries to update
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      console.log("data is here", data);
     },
     onError: (error) => {
       console.error("Error creating blog", error);
@@ -28,7 +27,7 @@ export const useCreateBlog = () => {
 
 export const useGetSingleBlog = (data) => {
   return useQuery({
-    queryKey: ["blogs", data],
+    queryKey: ["blogs", data.blog_id],
     queryFn: () => blogApi.getSingleBlog(data),
     enabled: !!data,
   });
@@ -41,8 +40,8 @@ export const useDeleteBlog = () => {
     mutationFn: (data) => blogApi.deleteBlog(data),
 
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["blogs",data.blog_id] });
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      console.log("Blog deleted successfully", data);
     },
     onError: (error) => {
       console.error("Error creating blog", error);
@@ -58,7 +57,7 @@ export const useUpdateBlog = () => {
 
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      console.log("Blog updated successfully", data);
+      queryClient.invalidateQueries({ queryKey: ["blogs", data.blog_id] });
     },
 
     onError: (error) => {

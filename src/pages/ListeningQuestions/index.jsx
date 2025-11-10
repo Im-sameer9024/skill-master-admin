@@ -21,11 +21,12 @@ import EditListeningQuestionStatus from "@/components/core/ListeningQuestion/Edi
 import DeleteListeningQuestion from "@/components/core/ListeningQuestion/DeleteListeningQuestion";
 import EditListeningQuestion from "@/components/core/ListeningQuestion/EditListeningQuestion";
 import SingleListeningQuestion from "@/components/core/ListeningQuestion/SingleListeningQuestion";
+import ReactAudioPlayer from "react-audio-player";
 // import EditListeningStatus from "@/components/core/Listening/EditListeningStatus";
 // import { useGetListeningItemsById } from "./hooks/useListeningItem";
 
 const ListeningQuestionsPage = () => {
-  const { id } = useParams();
+  const { listening_item_id, audio_id } = useParams();
 
   const [showCreateListeningQuestion, setShowCreateListeningQuestion] =
     useState(false);
@@ -40,7 +41,13 @@ const ListeningQuestionsPage = () => {
     data: ListeningQuestionsData,
     isLoading,
     error,
-  } = useGetListeningQuestionsById(id);
+  } = useGetListeningQuestionsById(listening_item_id, audio_id);
+
+  const { VITE_CLIENT_AUDIO_URL } = import.meta.env;
+
+  const audioUrl = `${VITE_CLIENT_AUDIO_URL}`;
+
+  console.log("data of quesiton", ListeningQuestionsData);
 
   const openEditStatusModal = (id) => {
     setShowEditStatusModal(true);
@@ -69,7 +76,13 @@ const ListeningQuestionsPage = () => {
         {index + 1}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-        {question.title}
+        <div className="w-62">
+          <ReactAudioPlayer
+            src={`${audioUrl}/${question?.audioFile}`}
+            controls
+            className="w-full"
+          />
+        </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {question.answer}
